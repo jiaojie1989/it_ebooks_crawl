@@ -13,7 +13,7 @@ $toString = function($origin, $target = 5, $char = " ") {
     return $origin;
 };
 
-for($num = 1; $num <= 6000; $num++) {
+for($num = 1; $num <= 7000; $num++) {
 //$num = 3;
     $data = $getPageTool(sprintf(EBOOK_PAGE_URL, $num));
     $num = $toString($num);
