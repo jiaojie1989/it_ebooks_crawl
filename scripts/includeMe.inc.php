@@ -61,6 +61,8 @@ $analyzeTool = function($data) {
     $subtitle = str_replace("</h1>\r\n<h3>", "", $subtitle[0]);
     $subtitle = str_replace("</h3>", "", $subtitle);
     $ret["subtitle"] = $subtitle;
+    // description
+    $description = null;
     return $ret;
 };
 
