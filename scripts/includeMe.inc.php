@@ -1,4 +1,5 @@
 <?php
+
 define("EBOOK_PAGE_URL", "http://it-ebooks.info/book/%s/"); // replace with integer
 define("EBOOK_DETAIL_API", ""); // frequency limit (1000 per one day)
 define("SINCE_FILE", "hits");
@@ -25,12 +26,12 @@ $getPageTool = function($url, $timeLimit = 10) use($redis) {
         ],
     ];
     if ($data = $redis->get(md5($url))) {
-
+        
     } else {
         do {
             $data = file_get_contents($url, false, stream_context_create($ctx));
             usleep(100000);
-        } while(!$data);
+        } while (!$data);
         $redis->setex(md5($url), 3600 * 24 * 64, $data);
     }
     return $data;
@@ -49,7 +50,7 @@ $analyzeTool = function($data) {
     //echo $data . "\n";
     // title
     $title = null;
-    preg_match("/<h1 itemprop=\"name\">".REG_CHAR."*<\/h1>/", $data, $title);
+    preg_match("/<h1 itemprop=\"name\">" . REG_CHAR . "*<\/h1>/", $data, $title);
     //var_dump($title);
     //echo "/<h1 itemprop=\"name\">".REG_CHAR."*<\/h1>/";
     $title = str_replace("<h1 itemprop=\"name\">", "", $title[0]);
@@ -57,12 +58,16 @@ $analyzeTool = function($data) {
     $ret["title"] = $title;
     // subtitle
     $subtitle = null;
-    preg_match("/<\/h1>\r\n<h3>".REG_CHAR."*<\/h3>/", $data, $subtitle);
+    preg_match("/<\/h1>\r\n<h3>" . REG_CHAR . "*<\/h3>/", $data, $subtitle);
     $subtitle = str_replace("</h1>\r\n<h3>", "", $subtitle[0]);
     $subtitle = str_replace("</h3>", "", $subtitle);
     $ret["subtitle"] = $subtitle;
     // description
     $description = null;
+    preg_match("/<span itemprop=\"description\">" . REG_CHAR . "*<\/span>/", $data, $description);
+    $description = str_replace("<span itemprop=\"description\">", "", $description[0]);
+    $description = str_replace("</span>", "", $description);
+    $ret["description"] = $description;
     return $ret;
 };
 
