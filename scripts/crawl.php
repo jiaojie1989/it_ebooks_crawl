@@ -22,10 +22,15 @@ for($num = 1; $num <= 7000; $num++) {
         if (empty($info["title"]) || !isset($info["subtitle"])) {
             echo "[\033[31mErr \033[0m] [{$num}] contains no data\n";
             //var_dump($num);
-            $resetCache(intval($num));
-            $num--;
+            $resetCache(intval($num--));
         } else {
             echo "[\033[36mInfo\033[0m] [{$num}] [\033[32m{$info["title"]}\033[0m]\n";
+            echo $info["description"] . "\n";
+            if (empty($info["description"])) {
+                $resetCache(intval($num));
+                echo "[\033[31mWarn\033[0m] [{$num}] no description\n";
+                $num--;
+            }
         }
     } else {
         echo "[\033[35mWarn\033[0m] [{$num}] 404 inside\n";
