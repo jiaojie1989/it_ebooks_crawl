@@ -3,7 +3,7 @@
 define("EBOOK_PAGE_URL", "http://it-ebooks.info/book/%s/"); // replace with integer
 define("EBOOK_DETAIL_API", ""); // frequency limit (1000 per one day)
 define("SINCE_FILE", "hits");
-define("REG_CHAR", '[a-zA-Z0-9\/\?\\\ \,\'\"\.\`\*\-\(\)\=\+\[\]\:\;\<\>\$\!\&\~\@\#\^]');
+define("REG_CHAR", '[a-zA-Z0-9\/\r\n\?\\\ \,\'\"\.\`\*\-\(\)\=\+\[\]\:\;\<\>\$\!\&\~\@\#\^]');
 
 $conn = new mysqli("127.0.0.1:3306", "jiaojie", "jiaojie", "it_ebooks");
 if ($conn->connect_error) {
