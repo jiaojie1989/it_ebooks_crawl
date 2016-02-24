@@ -11,7 +11,8 @@ if ($conn->connect_error) {
     throw new Exception("Connect Error: {$conn->connect_error}");
 }
 
-$redis = new Redis(); try {
+$redis = new Redis();
+try {
     $redis->connect("127.0.0.1", 6379);
 } catch (RedisException $e) {
     throw new Exception($e->getMessage(), $e->getCode(), $e);
@@ -59,14 +60,14 @@ $getRegexp = function() use($redis) {
     $redis->select(1);
     $hash = $redis->sMembers("RegExp");
     $str = "[";
-    foreach($hash as $v) {
+    foreach ($hash as $v) {
         $ret = null;
         preg_match("/[a-zA-Z0-9\r\n\t]+/", $v, $ret);
         if (!empty($ret)) {
-        //    var_dump("Hit Normal");
+            //    var_dump("Hit Normal");
             $str .= "" . $v;
         } else {
-        //    var_dump("No Hit Normal");
+            //    var_dump("No Hit Normal");
             $str .= "\\" . $v;
         }
     }
@@ -83,44 +84,64 @@ $initRegexp = function($data) use($setRegexp) {
         //var_dump($char);
         $setRegexp($char);
         $i++;
-    } while($i < $len);
+    } while ($i < $len);
 };
 
-$analyzeTool = function($data) use($getRegexp, $initRegexp) {
-    $initRegexp($data);
+$pregTools = function($data, $pre, $aft, $strReplace = false, $forceDelHtml = false) use($getRegexp, $initRegexp) {
+    $addmyslashes = function($str) {
+        $str = addslashes($str);
+        $str = addcslashes($str, '/');
+        return $str;
+    };
+    $ret = null;
+    preg_match("/" . $addmyslashes($pre) . $getRegexp() . "*?" . $addmyslashes($aft) . "/", $data, $ret);
+    if ($strReplace) {
+        $ret = str_replace($pre, "", $ret[0]);
+        $ret = str_replace($aft, "", $ret);
+    } else {
+        $ret = strip_tags($ret[0]);
+    }
+    return $forceDelHtml ? strip_tags($ret) : $ret;
+};
+
+$analyzeTool = function($data) use($getRegexp, $initRegexp, $pregTools) {
+    /*    $i = 0;
+      do {
+      $ord = mb_substr($description[0], $i, 1);
+      $nu = ord($ord);
+      var_dump("{$ord}  -  {$nu}");
+      var_dump($i);
+      $i++;
+      } while($i < mb_strlen($description[0]));
+     */
+//    $initRegexp($data);
     $ret = [];
-    //echo $data . "\n";
     // title
-    $title = null;
-    preg_match("/<h1 itemprop=\"name\">" . $getRegexp() . "*<\/h1>/", $data, $title);
-    //var_dump($title);
-    //echo "/<h1 itemprop=\"name\">".REG_CHAR."*<\/h1>/";
-    $title = str_replace("<h1 itemprop=\"name\">", "", $title[0]);
-    $title = str_replace("</h1>", "", $title);
-    $ret["title"] = $title;
+    $ret["title"] = $pregTools($data, "<h1 itemprop=\"name\">", "</h1>");
     // subtitle
-    $subtitle = null;
-    preg_match("/<\/h1>\r\n<h3>" . $getRegexp() . "*<\/h3>/", $data, $subtitle);
-    $subtitle = str_replace("</h1>\r\n<h3>", "", $subtitle[0]);
-    $subtitle = str_replace("</h3>", "", $subtitle);
-    $ret["subtitle"] = $subtitle;
+    $ret["subtitle"] = $pregTools($data, "</h1>\r\n<h3>", "</h3>", true);
     // description
-    $description = null;
-    preg_match("/<span itemprop=\"description\">" . $getRegexp() . "*<\/span>/", $data, $description);
-//    preg_match("/<span itemprop=\"description\">" . REG_CHAR . "*/", $data, $description);
-//    echo $description[0] . "\n";
-/*    $i = 0;
-    do {
-        $ord = mb_substr($description[0], $i, 1);
-        $nu = ord($ord);
-        var_dump("{$ord}  -  {$nu}");
-        var_dump($i);
-        $i++;
-    } while($i < mb_strlen($description[0]));
-*/
-    $description = str_replace("<span itemprop=\"description\">", "", $description[0]);
-    $description = str_replace("</span>", "", $description);
-    $ret["description"] = $description;
+    $ret["description"] = $pregTools($data, "<span itemprop=\"description\">", "</span>");
+    // publisher
+    $ret["publisher"] = $pregTools($data, "itemprop=\"publisher\">", "</td></tr>", true, true);
+    // author
+    $ret["author"] = $pregTools($data, "<b itemprop=\"author\" style=\"display:none;\">", "</b>");
+    // isbn
+    $ret["isbn"] = $pregTools($data, "<b itemprop=\"isbn\">", "</b>");
+    // datePublished
+    $ret["datePublished"] = $pregTools($data, "<b itemprop=\"datePublished\">", "</b>");
+    // numberOfPages
+    $ret["numberOfPages"] = $pregTools($data, "<b itemprop=\"numberOfPages\">", "</b>");
+    // inLanguage
+    $ret["inLanguage"] = $pregTools($data, "<b itemprop=\"inLanguage\">", "</b>");
+    // fileSize
+    $ret["fileSize"] = $pregTools($data, "<tr><td>File size:</td><td><b>", "</b>", true);
+    // bookFormat
+    $ret["bookFormat"] = $pregTools($data, "<b itemprop=\"bookFormat\">", "</b>");
+    // downloadUrl
+    $ret["downloadUrl"] = $pregTools($data, "<tr><td>Download:</td><td><a href='", "'>", true);
+    // buyUrl
+    $ret["buyUrl"] = $pregTools($data, "<tr><td>Buy:</td><td><a href=\"", "\"", true);
     return $ret;
 };
 
