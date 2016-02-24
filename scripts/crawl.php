@@ -26,6 +26,7 @@ for($num = 1; $num <= 7000; $num++) {
             $num--;
         } else {
             echo "[\033[36mInfo\033[0m] [{$num}] [\033[32m{$info["title"]}\033[0m]\n";
+            echo $info["description"] . "\n";
         }
     } else {
         echo "[\033[35mWarn\033[0m] [{$num}] 404 inside\n";
