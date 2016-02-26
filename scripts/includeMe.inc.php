@@ -145,3 +145,19 @@ $analyzeTool = function($data) use($getRegexp, $initRegexp, $pregTools) {
     return $ret;
 };
 
+$postTool = function($data = "{}", $url = "http://localhost:8983/solr/ebooks/schema") {
+    $ctx = [
+        "http" => [
+            "method" => "POST",
+            "header" => "Content-type:application/json\r\n\n\n",
+            "content" => $data,
+            "timeout" => 5,
+        ],
+    ];
+    $stream = stream_context_create($ctx);
+    do {
+        $ret = file_get_contents($url, false, $stream);
+    } while (empty($ret));
+    return $ret;
+};
+
